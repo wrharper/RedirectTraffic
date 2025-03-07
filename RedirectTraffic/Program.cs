@@ -15,10 +15,19 @@ class Program
         var filterIp = PacketFilter.GetFilter(PacketFilter.FilterType.Ip);
         var filterTcp = PacketFilter.GetFilter(PacketFilter.FilterType.Tcp);
         var filterPort = PacketFilter.CreatePortFilter(40000); // Source port 40000
+        var filterSourceIP = PacketFilter.CreateSourceIPFilter("192.168.1.1");
+        var filterDestinationIP = PacketFilter.CreateDestinationIPFilter("192.168.1.1");
+        var allowSourceIPToDestinationFromPort = PacketFilter.AllowSourceIPToDestinationFromPort("192.168.1.1", "192.168.1.2", 40000);
+        var blockAllExceptSourceIP = PacketFilter.BlockAllExceptSourceIP("192.168.1.1");
+        var allowOnlyToDestinationIP = PacketFilter.AllowOnlyToDestinationIP("192.168.1.2");
+        var blockTrafficToPort = PacketFilter.BlockTrafficToPort(8080);
+        var allowSpecificProtocol = PacketFilter.AllowSpecificProtocol("udp");
+        var blockTrafficFromIPRange = PacketFilter.BlockTrafficFromIPRange("192.168.1.0/24");
+        var allowOnlySecureTraffic = PacketFilter.AllowOnlySecureTraffic();
         var customFilter = PacketFilter.CreateCustomFilter("tcp and ip.DstAddr == 192.168.1.1");
 
         // Use one of the filters
-        var filter = filterTrue; // Change this to use a different filter
+        var filter = allowOnlySecureTraffic; // Change this to use a different filter
 
         IntPtr packetBuffer = Marshal.AllocHGlobal(1500); // Allocate buffer for packet
 

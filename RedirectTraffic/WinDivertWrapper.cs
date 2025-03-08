@@ -1,44 +1,42 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 public class WinDivertWrapper : IDisposable
 {
-    private const string DLL_NAME = "WindivertWrapper.dll";
+    private const string DllName = "WindivertWrapper.dll";
     private IntPtr handle;
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Ansi)]
-    private static extern IntPtr WindivertOpen(string filter, int layer, short priority, ulong flags);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OpenEx")]
+    private static extern IntPtr OpenEx(string filter, int layer, short priority, ulong flags);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertClose(IntPtr handle);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "CloseEx")]
+    private static extern bool CloseEx();
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertRecv(IntPtr handle, IntPtr pPacket, uint packetLen, out uint pRecvLen, out WindivertAddress pAddr);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "RecvExx")]
+    private static extern bool RecvExx(IntPtr address, IntPtr packet, uint packetLen, out uint recvLen);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertRecvEx(IntPtr handle, IntPtr pPacket, uint packetLen, out uint pRecvLen, ulong flags, out WindivertAddress pAddr, out uint pAddrLen, IntPtr lpOverlapped);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "RecvExEx")]
+    private static extern bool RecvExEx(IntPtr address, IntPtr packet, uint packetLen, out uint recvLen, ulong flags, out uint addrLen, IntPtr lpOverlapped);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertSend(IntPtr handle, IntPtr pPacket, uint packetLen, out uint pSendLen, ref WindivertAddress pAddr);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "SendExx")]
+    private static extern bool SendExx(IntPtr address, IntPtr packet, uint packetLen, out uint sendLen);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertSendEx(IntPtr handle, IntPtr pPacket, uint packetLen, out uint pSendLen, ulong flags, ref WindivertAddress pAddr, uint addrLen, IntPtr lpOverlapped);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "SendExEx")]
+    private static extern bool SendExEx(IntPtr address, IntPtr packet, uint packetLen, out uint sendLen, ulong flags, uint addrLen, IntPtr lpOverlapped);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertShutdown(IntPtr handle, int how);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ShutdownEx")]
+    private static extern bool ShutdownEx(int how);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertSetParam(IntPtr handle, int param, ulong value);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "SetParamEx")]
+    private static extern bool SetParamEx(int param, ulong value);
 
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertGetParam(IntPtr handle, int param, out ulong pValue);
-
-    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Winapi)]
-    private static extern bool WindivertHelperCalcChecksums(IntPtr pPacket, uint packetLen, ref WindivertAddress pAddr, ulong flags);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "GetParamEx")]
+    private static extern bool GetParamEx(int param, out ulong value);
 
     public WinDivertWrapper(string filter, WindivertLayer layer, short priority, WindivertFlags flags)
     {
-        handle = WindivertOpen(filter, (int)layer, priority, (ulong)flags);
+        handle = OpenEx(filter, (int)layer, priority, (ulong)flags);
         if (handle == IntPtr.Zero)
         {
             throw new InvalidOperationException("Failed to open WinDivert handle.");
@@ -49,49 +47,44 @@ public class WinDivertWrapper : IDisposable
     {
         if (handle != IntPtr.Zero)
         {
-            WindivertClose(handle);
+            CloseEx();
             handle = IntPtr.Zero;
         }
     }
 
-    public bool Recv(IntPtr pPacket, uint packetLen, out uint pRecvLen, out WindivertAddress pAddr)
+    public bool Recv(IntPtr pPacket, uint packetLen, out uint pRecvLen)
     {
-        return WindivertRecv(handle, pPacket, packetLen, out pRecvLen, out pAddr);
+        return RecvExx(IntPtr.Zero, pPacket, packetLen, out pRecvLen);
     }
 
-    public bool RecvEx(IntPtr pPacket, uint packetLen, out uint pRecvLen, WindivertFlags flags, out WindivertAddress pAddr, out uint pAddrLen, IntPtr lpOverlapped)
+    public bool RecvEx(IntPtr pPacket, uint packetLen, out uint pRecvLen, WindivertFlags flags, out uint pAddrLen, IntPtr lpOverlapped)
     {
-        return WindivertRecvEx(handle, pPacket, packetLen, out pRecvLen, (ulong)flags, out pAddr, out pAddrLen, lpOverlapped);
+        return RecvExEx(IntPtr.Zero, pPacket, packetLen, out pRecvLen, (ulong)flags, out pAddrLen, lpOverlapped);
     }
 
-    public bool Send(IntPtr pPacket, uint packetLen, out uint pSendLen, ref WindivertAddress pAddr)
+    public bool Send(IntPtr pPacket, uint packetLen, out uint pSendLen)
     {
-        return WindivertSend(handle, pPacket, packetLen, out pSendLen, ref pAddr);
+        return SendExx(IntPtr.Zero, pPacket, packetLen, out pSendLen);
     }
 
-    public bool SendEx(IntPtr pPacket, uint packetLen, out uint pSendLen, WindivertFlags flags, ref WindivertAddress pAddr, uint addrLen, IntPtr lpOverlapped)
+    public bool SendEx(IntPtr pPacket, uint packetLen, out uint pSendLen, WindivertFlags flags, uint addrLen, IntPtr lpOverlapped)
     {
-        return WindivertSendEx(handle, pPacket, packetLen, out pSendLen, (ulong)flags, ref pAddr, addrLen, lpOverlapped);
+        return SendExEx(IntPtr.Zero, pPacket, packetLen, out pSendLen, (ulong)flags, addrLen, lpOverlapped);
     }
 
     public bool Shutdown(WindivertShutdown how)
     {
-        return WindivertShutdown(handle, (int)how);
+        return ShutdownEx((int)how);
     }
 
     public bool SetParam(WindivertParam param, ulong value)
     {
-        return WindivertSetParam(handle, (int)param, value);
+        return SetParamEx((int)param, value);
     }
 
     public bool GetParam(WindivertParam param, out ulong pValue)
     {
-        return WindivertGetParam(handle, (int)param, out pValue);
-    }
-
-    public static bool CalcChecksums(IntPtr pPacket, uint packetLen, ref WindivertAddress pAddr, ulong flags)
-    {
-        return WindivertHelperCalcChecksums(pPacket, packetLen, ref pAddr, flags);
+        return GetParamEx((int)param, out pValue);
     }
 
     public void Dispose()

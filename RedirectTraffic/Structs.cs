@@ -102,6 +102,9 @@ public unsafe struct WindivertTcphdr
     public ushort Checksum;
     public ushort UrgPtr;
 
+    public bool Syn => (Flags & 0x02) != 0;
+    public bool Ack => (Flags & 0x10) != 0;
+
     public byte DataOffset
     {
         get => (byte)(DataOffsetAndReserved >> 4);
